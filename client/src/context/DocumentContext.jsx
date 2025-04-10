@@ -1,7 +1,8 @@
-import { createContext } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
 import { AuthContext } from "./AuthContext";
 
-export const DocumentContext = createContext()
+export const DocumentContext = createContext();
 
 export const DocumentProvider = ({ children }) => {
   const [documents, setDocuments] = useState([]);
@@ -60,36 +61,61 @@ export const DocumentProvider = ({ children }) => {
   const updateDocument = async (id, documentData) => {
     try {
       setSaving(true);
-      const res = await axios.put(`/api/documents/${id}`, documentData);
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const res = await axios.put(`/api/documents/${id}`, documentData, {
+        headers: {
+          "x-auth-token": token,
+        },
+      });
 
       setDocuments(documents.map((doc) => (doc._id === id ? { ...doc, ...res.data } : doc)));
 
       setCurrentDocument(res.data);
-      setSaving(false);
       setSavedStatus("Saved");
 
-      // Reset saved status after 2 seconds
-      setTimeout(() => {
-        setSavedStatus("");
-      }, 2000);
-
+      setTimeout(() => setSavedStatus(""), 2000);
       return res.data;
     } catch (err) {
-      setError("Error updating document");
-      setSaving(false);
+      const errorMsg = err.response?.data?.message || "Failed to update document";
+      setError(errorMsg);
       setSavedStatus("Error saving");
+      console.error("Update error:", errorMsg);
       return null;
+    } finally {
+      setSaving(false);
     }
   };
 
   // Delete document
   const deleteDocument = async (id) => {
     try {
-      await axios.delete(`/api/documents/${id}`);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.delete(`/api/documents/${id}`, {
+        headers: {
+          "x-auth-token": token,
+        },
+      });
+
       setDocuments(documents.filter((doc) => doc._id !== id));
+
+      // If current document is the one being deleted, clear it
+      if (currentDocument?._id === id) {
+        setCurrentDocument(null);
+      }
+
       return true;
     } catch (err) {
-      setError("Error deleting document");
+      console.error("Delete Error:", err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || "Error deleting document");
       return false;
     }
   };
@@ -123,4 +149,4 @@ export const DocumentProvider = ({ children }) => {
       {children}
     </DocumentContext.Provider>
   );
-}
+};

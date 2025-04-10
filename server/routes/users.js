@@ -19,7 +19,7 @@ router.post("/register", async (req, res) => {
       password,
     });
 
-    user.password = bcrypt.hash(password, 10);
+    user.password = await bcrypt.hash(password, 10);
     await user.save();
 
     //Generate JWT token
@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
       res.json({ token });
     });
   } catch (error) {
-    res.status(500).json({ msg: err.message });
+    res.status(500).json({ msg: error.message });
   }
 });
 
@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = User.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ msg: "Invalid Credentials" });
     }
@@ -62,8 +62,17 @@ router.post("/login", async (req, res) => {
       res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
     });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    res.json(user);
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-module.export = router;
+module.exports = router;

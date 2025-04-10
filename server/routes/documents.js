@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const Document = require("../models/Document");
 const auth = require("../middleware/auth");
+const { default: mongoose } = require("mongoose");
 
 //Get all documents for a user
 router.get("/", auth, async (req, res) => {
   try {
-    const documents = Document.find({ user: req.user.id }).sort({ lastSaved: -1 });
+    const documents = await Document.find({ user: req.user.id }).sort({ lastSaved: -1 });
     res.json(documents);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,19 +42,37 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-//Update document
+// Update document
 router.put("/:id", auth, async (req, res) => {
   try {
-    let document = await Document.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid document ID format",
+      });
+    }
+
+    const document = await Document.findById(id);
     if (!document) {
-      return res.status(404).json({ message: "Document not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
     }
-    //Ensure user owns the document
-    if (document.user.toString() !== req.params.id) {
-      return res.status(403).json({ msg: "Access denied" });
+
+    // Verify document ownership
+    if (document.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to update this document",
+      });
     }
-    document = await Document.findByIdAndUpdate(
-      req.params.id,
+
+    const updatedDoc = await Document.findByIdAndUpdate(
+      id,
       {
         $set: {
           title: req.body.title || document.title,
@@ -61,11 +80,20 @@ router.put("/:id", auth, async (req, res) => {
           lastSaved: Date.now(),
         },
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
-    res.json(document);
+
+    res.json({
+      success: true,
+      data: updatedDoc,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Update Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during update",
+      error: error.message,
+    });
   }
 });
 
@@ -83,7 +111,7 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    await Document.findByIdAndRemove(req.params.id);
+    await Document.findByIdAndDelete(req.params.id);
     res.json({ message: "Document deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
