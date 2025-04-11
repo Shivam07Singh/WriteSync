@@ -11,7 +11,12 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://writesync108.netlify.app",
+  })
+);
+
 app.use(express.json());
 
 const connectDb = async (req, res) => {
