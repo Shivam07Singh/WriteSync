@@ -11,6 +11,8 @@ body {
   line-height: 1.6;
   color: #191919;
   background-color: #f8f9fa;
+  overflow: hidden;
+  height: 100%;
 }
 
 .container {
@@ -122,6 +124,7 @@ ul {
   justify-content: center;
   text-align: center;
   height: calc(100vh - 70px);
+  overflow: hidden;
 }
 
 /* Background image overlay */
