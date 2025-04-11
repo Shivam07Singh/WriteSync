@@ -30,6 +30,15 @@ function App() {
               }
             />
             <Route path="/document" element={<Navigate to="/documents" replace />} />
+
+            <Route
+              path="/view/:id"
+              element={
+                <PrivateRoute>
+                  <Editor readOnly={true} />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/editor/:id"
               element={

@@ -73,13 +73,12 @@ export const DocumentProvider = ({ children }) => {
         },
       });
 
-      setDocuments(documents.map((doc) => (doc._id === id ? { ...doc, ...res.data } : doc)));
-
-      setCurrentDocument(res.data);
+      setDocuments(documents.map((doc) => (doc._id === id ? { ...doc, ...res.data.data } : doc)));
+      setCurrentDocument(res.data.data);
       setSavedStatus("Saved");
 
       setTimeout(() => setSavedStatus(""), 2000);
-      return res.data;
+      return res.data.data;
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Failed to update document";
       setError(errorMsg);
@@ -99,7 +98,7 @@ export const DocumentProvider = ({ children }) => {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.delete(`/api/documents/${id}`, {
+      await axios.delete(`/api/documents/${id}`, {
         headers: {
           "x-auth-token": token,
         },

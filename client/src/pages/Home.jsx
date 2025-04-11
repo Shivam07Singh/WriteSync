@@ -5,8 +5,8 @@ const Home = () => {
   return (
     <div className="home-page">
       <div className="container">
-        <h1>Distraction-free Markdown Editor</h1>
-        <p>Create beautiful documents with Markdown</p>
+        <h1>Distraction-free WriteSync Editor</h1>
+        <p>Create beautiful documents with WriteSync</p>
         <div className="buttons">
           <Link to="/register" className="btn btn-primary">
             Sign Up

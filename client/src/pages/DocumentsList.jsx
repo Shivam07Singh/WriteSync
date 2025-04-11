@@ -54,6 +54,9 @@ const DocumentsList = () => {
                 <h3>{doc.title}</h3>
                 <p className="date">Last saved: {formatDate(doc.lastSaved)}</p>
                 <div className="actions">
+                  <Link to={`/view/${doc._id}`} className="btn btn-sm">
+                    View
+                  </Link>
                   <Link to={`/editor/${doc._id}`} className="btn btn-sm">
                     Edit
                   </Link>
